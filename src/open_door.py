@@ -21,8 +21,9 @@ class SubscriberClass():
         self.laser = receive_msg
 
     def message_value(self):
-        if bool(self.laser.ranges) == "True":
+        if bool(self.laser.ranges) == True:
             value = self.laser.ranges[359]
+            print 'value'
             return value
 
 
@@ -38,7 +39,7 @@ class PublishClass():
         self.pub_message.publish(twist_cmd)
 
 def main():
-    safety_distance = 3.0           #安全に進める距離の基準を入れた定数
+    safety_distance = 2.0           #安全に進める距離の基準を入れた定数
     rospy.loginfo('start "open_door"')
     sc = SubscriberClass()
     pc = PublishClass()
