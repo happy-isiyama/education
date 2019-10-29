@@ -38,7 +38,7 @@ class PublishClass():
         self.pub_message.publish(twist_cmd)
 
 def main():
-    safety_distance = 3.0           #安全に進める距離の基準を入れた定数
+    safety_distance = 1.0           #安全に進める距離の基準を入れた定数
     rospy.loginfo('start "open_door"')
     sc = SubscriberClass()
     pc = PublishClass()
@@ -47,7 +47,7 @@ def main():
         if state >= safety_distance:
             rospy.loginfo("start forward")
             for i in range(10):
-                pc.linerContorol(0.2)
+                pc.linerContorol(0.1)
                 break
         else:
             pass
