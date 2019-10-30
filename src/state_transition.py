@@ -33,7 +33,7 @@ class DoorOpne():
 
     def wait_message(self):#正面に値を受け取るまで待つ関数
         print "wait_message"
-        while not rospy.is_shutdown() and  self.flg == True:
+        while not rospy.is_shutdown() and  self.flg == False:
             print "wating for topic..."
             rospy.sleep(2.0)
         self.flg == False
@@ -41,7 +41,7 @@ class DoorOpne():
 
     def progress_condition(self):
         print "progress_condition"
-        safty_distance = 2.0 #安全距離の基準
+        safty_distance = 3.0 #安全距離の基準
         if self.forward >= safty_distance:
             return 2
         else:
