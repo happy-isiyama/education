@@ -11,17 +11,22 @@
 import rospy
 import sys
 from std_msgs.msg import String
+from yaml import load
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+import actionlib
+from std_srvs.srv import Empty
 
 
 class Navigation():
     def __init__(self):
         self.coord_list = []
-        self.sub_message = rospy.Subscriber('/scan', String, self.messageCB)
+        self.sub_message = rospy.Subscriber('/input_target', String, self.messageCB)
         self.target_name = String()
         self.flg = False
+        self.coord_list = [] 
 
     def messageCB(self,receive_msg):
-        self.target_name = receive_msg
+        self.target_name = receive_msg.data
         self.flg = True
 
     def input_value(self):
@@ -33,15 +38,18 @@ class Navigation():
 
     def searchLocationName(self):
         rospy.loginfo("search LocationName")
-        f = open('/home/athome/catkin_ws/src/mini_common_pkg/config/location_dict.yaml')
+        f = open('/home/athome/catkin_ws/src/mimi_common_pkg/config/location_dict.yaml')
         location_dict = load(f)
         f.close()
+        print self.target_name
+        rospy.sleep(2.0)
         if self.target_name in location_dict:
             print location_dict[self.target_name]
             rospy.loginfo("Return location_dict")
+            self.coord_list = location_dict[self.target_name]
             return 2 #一致する目的地がある場合、次のアクションクライアントへの送信へ
         else:
-            rospy.loginfo("NOT found<" + target_name + "> in LocationDict")
+            rospy.loginfo("NOT found<" + str(self.target_name) + "> in LocationDict")
             return 0 #目的地がLocation_dictにない場合、無い事を伝え最初に戻る
 
     def navigationAC(self):
@@ -53,10 +61,10 @@ class Navigation():
             goal = MoveBaseGoal()
             goal.target_pose.header.frame_id = 'map'
             goal.target_pose.header.stamp = rospy.Time.now()
-            goal.target_pose.pose.position.x = coord_list[0]
-            goal.target_pose.pose.position.y = coord_list[1]
-            goal.target_pose.pose.orientation.z = coord_list[2]
-            goal.target_pose.pose.orientation.w = coord_list[3]
+            goal.target_pose.pose.position.x = self.coord_list[0]
+            goal.target_pose.pose.position.y = self.coord_list[1]
+            goal.target_pose.pose.orientation.z = self.coord_list[2]
+            goal.target_pose.pose.orientation.w = self.coord_list[3]
             rospy.wait_for_service('move_base/clear_costmaps')
             clear_costmaps()
             rospy.sleep(1.0)
@@ -76,7 +84,7 @@ class Navigation():
                     rospy.loginfo('Navigation Failed')
                     rospy.sleep(1.0)
                     count += 1
-        except rospy.ROSInterruptExeption:
+        except rospy.ROSInterruptException:
             pass        
 
 
