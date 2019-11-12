@@ -82,6 +82,11 @@ class Navigation():
                 if count == 10:
                     count = 0
                     rospy.loginfo('Navigation Failed')
+                    return 0
+                else:
+                    rospy.loginfo('Buried in obstacle')
+                    self.clear_costmaps()
+                    rospy.loginfo('Clear Costmaps')
                     rospy.sleep(1.0)
                     count += 1
         except rospy.ROSInterruptException:
