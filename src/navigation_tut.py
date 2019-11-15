@@ -21,19 +21,24 @@ class Navigation():
     def __init__(self):
         self.coord_list = []
         self.sub_message = rospy.Subscriber('/input_target', String, self.messageCB)
-        self.target_name = String()
-        self.flg = False
+        self.target_name = 'NULL'
+      #  self.flg = False
         self.coord_list = [] 
+      #  self.place = String('n')
 
     def messageCB(self,receive_msg):
-        self.target_name = receive_msg.data
-        self.flg = True
+      #  self.target_name != self.place:
+      self.target_name = receive_msg.data
+        #self.place = self.target_name
+       # self.flg = True
 
     def input_value(self):
-        while not rospy.is_shutdown() and self.flg == False:
+    #    while not rospy.is_shutdown() and self.flg == False:
+        self.target_name = 'NULL'
+        while not rospy.is_shutdown() and self.target_name == 'NULL':
             print "wait for topic..."
             rospy.sleep(2.0)
-        self.flg == False
+       # self.flg == False
         return 1
 
     def searchLocationName(self):
@@ -69,26 +74,29 @@ class Navigation():
             clear_costmaps()
             rospy.sleep(1.0)
             ac.send_goal(goal)
-            state = ac.get_state()
             count = 0
-            if state == 1:
-                rospy.loginfo('Got out of the obstacle')
-                rospy.sleep(1.0)
-            elif state == 3:
-                rospy.loginfo('Navigation success!!')
-                return 3
-                state = 0
-            elif state == 4:
-                if count == 10:
-                    count = 0
-                    rospy.loginfo('Navigation Failed')
-                    return 0
-                else:
-                    rospy.loginfo('Buried in obstacle')
-                    self.clear_costmaps()
-                    rospy.loginfo('Clear Costmaps')
+            while not rospy.is_shutdown():
+                state = ac.get_state()
+                if state == 1:
+                    rospy.loginfo('Got out of the obstacle')
                     rospy.sleep(1.0)
-                    count += 1
+                elif state == 3:
+                    rospy.loginfo('Navigation success!!')
+                    return 0
+               # state = 0
+                elif state == 4:
+                    if count == 10:
+                        count = 0
+                        rospy.loginfo('Navigation Failed')
+                        return 0
+                    else:
+                        rospy.loginfo('Buried in obstacle')
+                        self.clear_costmaps()
+                        rospy.loginfo('Clear Costmaps')
+                        rospy.sleep(1.0)
+                        count += 1
+            self.target_name = 'NULL'
+            rospy.sleep(2.0)
         except rospy.ROSInterruptException:
             pass        
 
