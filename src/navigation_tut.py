@@ -22,23 +22,16 @@ class Navigation():
         self.coord_list = []
         self.sub_message = rospy.Subscriber('/input_target', String, self.messageCB)
         self.target_name = 'NULL'
-      #  self.flg = False
         self.coord_list = [] 
-      #  self.place = String('n')
 
     def messageCB(self,receive_msg):
-      #  self.target_name != self.place:
-      self.target_name = receive_msg.data
-        #self.place = self.target_name
-       # self.flg = True
+        self.target_name = receive_msg.data
 
     def input_value(self):
-    #    while not rospy.is_shutdown() and self.flg == False:
         self.target_name = 'NULL'
         while not rospy.is_shutdown() and self.target_name == 'NULL':
             print "wait for topic..."
             rospy.sleep(2.0)
-       # self.flg == False
         return 1
 
     def searchLocationName(self):
@@ -83,7 +76,6 @@ class Navigation():
                 elif state == 3:
                     rospy.loginfo('Navigation success!!')
                     return 0
-               # state = 0
                 elif state == 4:
                     if count == 10:
                         count = 0
@@ -95,7 +87,6 @@ class Navigation():
                         rospy.loginfo('Clear Costmaps')
                         rospy.sleep(1.0)
                         count += 1
-            self.target_name = 'NULL'
             rospy.sleep(2.0)
         except rospy.ROSInterruptException:
             pass        
