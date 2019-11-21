@@ -16,53 +16,45 @@ from std_srvs.srv import Empty
 import smach
 import smach_ros
 
+
 class Subscription(smach.State):
     def __init__(self):
-        smach.State.__init__(self,
-                             outcomes=['outcome1'],
+        smach.State.__init__(self,  
+                outcomes=['outcome1','outcome2'],
                              output_keys=['sub_target_out'])
         self.sub_message = rospy.Subscriber('/input_target', String, self.messageCB)
-        
-    def messageCB(self, receive_msg, userdata):
-        userdata.sub_target = receive_msg.data
+        self.message = String()
 
-    def excute(self, userdata):
-        userdata.sub_target = 'NULL'
-        while not rospy.is_shutdown() and userdata.sub_target == 'NULL':
+    def messageCB(self, receive_msg):
+        self.message = receive_msg.data
+
+    def execute(self, userdata):
+        self.message = 'NULL'
+        while not rospy.is_shutdown() and self.message == 'NULL':
             print "wait for topic..."
             rospy.sleep(2.0)
-        return 'outcome1'
-
-class SearchLocationName(smach.State):
-    def __init__(self):
-        smach.State.__init__(self,
-                outcomes=['outcome0','outcome2']
-                input_keys=['seaech_target_in']
-                output_keys=['seach_taeget_out'])
-
-    def excute(self, userdata):
+        userdata.sub_target_out = self.message
         rospy.loginfo("search LocationName")
         f = open('/home/athome/catkin_ws/src/mimi_common_pkg/config/location_dict.yaml')
         location_dict = load(f)
         f.close()
-        print userdata.seaech_target_in
+        print userdata.seaech_target_out
         rospy.sleep(2.0)
-        if userdata.seaech_target_in in location_dict:
-            print location_dict[userdata.seaech_target_in]
-            userdata.seaech_target_out = userdata.seaech_target_in
+        if userdata.sub_target_out in location_dict:
+            print location_dict[userdata.sub_target_out]
             return 'outcome2'
         else:
             rospy.loginfo("NOT fount" + str(userdata.seaech_target_in) + "> in LocationDict")
-            return 'outcome0'
+            return 'outcome1'
 
 class NavigationAC(smach.State):
     def __init__(self):
         smach.State.__init__(self,
-                outcomes=['outcome0,outcome3']
+                outcomes=['outcome1','outcome3'],
                 input_keys=['nav_target_in'])
         self.coord_list = []
 
-    def excute(self, userdata):
+    def execute(self, userdata):
         try:
             rospy.loginfo("Start Navigation")
             ac = actionlib.SimpleActionClient('move_base', MoveBaseAction)
@@ -92,6 +84,9 @@ class NavigationAC(smach.State):
                     if count == 10:
                         count = 0
                         rospy.loginfo('Navigation Failed')
+                        return 'outcome1'
+                    else:
+                        rospy.loginfo('Buried in obstacle')
                         self.clear_costmaps()
                         rospy.loginfo('Clear Costmaps')
                         rospy.sleep(1.0)
@@ -101,25 +96,22 @@ class NavigationAC(smach.State):
             pass
 
 
-
-
-
-
 def main():
-    rospy.init_node('navigation_smach')
-    sm = smach.StateMachine(outcomes=['outcome', ''])#最終的に行き着く結果
+    sm = smach.StateMachine(outcomes=['outcome3'])#最終的に行き着く結果
+    sm.userdata.sm_target = 'NULL'
     with sm:
         smach.StateMachine.add('SUB', Subscription(),
-                transition={'outcome1':'SEARCH'})
-                remapping={'sub_target':'target_name'}
-        smach.StateMachine.add('SEARCH', SearchLocationName(),
-                transition={'outcome0':'SUB','outcome2':'NAV'}
-                remapping={'seaech_target_in':'target_name'}
+                transitions={'outcome1':'NAV'},
+                remapping={'sub_target_out':'sm_target'})
         smach.StateMachine.add('NAV', NavigationAC(),
-                transition={'outcome0':'SUB','outcome3':'SUB'}
-    outcome = sm.excute()
-    rospy.loginfo(('Finish "Navigation"')
+                transitions={'outcome1':'SUB',
+                    'outcome3':'SUB'},
+                remapping={'nav_target_in':'sm_target'})
+    outcome = sm.execute()
+    rospy.loginfo('Finish "Navigation"')
+
 
 if __name__ == '__main__':
+    rospy.init_node('navigation_smach')
     main()
 
