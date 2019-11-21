@@ -21,7 +21,9 @@ class Subscription(smach.State):
     def __init__(self):
         smach.State.__init__(self,  
                 outcomes=['outcome1','outcome2'],
-                             output_keys=['sub_target_out'])
+               # input_keys=['sub_target_in'],
+                output_keys=['sub_target_out'])
+        
         self.sub_message = rospy.Subscriber('/input_target', String, self.messageCB)
         self.message = String()
 
@@ -33,19 +35,19 @@ class Subscription(smach.State):
         while not rospy.is_shutdown() and self.message == 'NULL':
             print "wait for topic..."
             rospy.sleep(2.0)
-        userdata.sub_target_out = self.message
         rospy.loginfo("search LocationName")
         f = open('/home/athome/catkin_ws/src/mimi_common_pkg/config/location_dict.yaml')
         location_dict = load(f)
         f.close()
-        print userdata.seaech_target_out
+        print self.message
         rospy.sleep(2.0)
-        if userdata.sub_target_out in location_dict:
-            print location_dict[userdata.sub_target_out]
-            return 'outcome2'
-        else:
-            rospy.loginfo("NOT fount" + str(userdata.seaech_target_in) + "> in LocationDict")
+        if self.message in location_dict:
+            userdata.sub_target_out = location_dict[self.message]
+            print location_dict[self.message]
             return 'outcome1'
+        else:
+            rospy.loginfo("NOT fount" + str(userdata.sub_target_out) + "> in LocationDict")
+            return 'outcome2'
 
 class NavigationAC(smach.State):
     def __init__(self):
@@ -57,6 +59,7 @@ class NavigationAC(smach.State):
     def execute(self, userdata):
         try:
             rospy.loginfo("Start Navigation")
+            self.coord_list = userdata.nav_target_in
             ac = actionlib.SimpleActionClient('move_base', MoveBaseAction)
             ac.wait_for_server()
             clear_costmaps = rospy.ServiceProxy('move_base/clear_costmaps', Empty)
@@ -67,7 +70,7 @@ class NavigationAC(smach.State):
             goal.target_pose.pose.position.y = self.coord_list[1]
             goal.target_pose.pose.orientation.z = self.coord_list[2]
             goal.target_pose.pose.orientation.w = self.coord_list[3]
-            rospy.wait_for_server('move_base/clear_costmaps')
+            rospy.wait_for_service('move_base/clear_costmaps')
             clear_costmaps()
             rospy.sleep(1.0)
             ac.send_goal(goal)
@@ -98,12 +101,13 @@ class NavigationAC(smach.State):
 
 def main():
     sm = smach.StateMachine(outcomes=['outcome3'])#最終的に行き着く結果
-    sm.userdata.sm_target = 'NULL'
+   # sm.userdata.sm_target = [] 
     with sm:
         smach.StateMachine.add('SUB', Subscription(),
                 transitions={'outcome1':'NAV',
                     'outcome2':'SUB'},
-                remapping={'sub_target_out':'sm_target'})
+                remapping={#'sub_target_in':'sm_target',
+                    'sub_target_out':'sm_target'})
         smach.StateMachine.add('NAV', NavigationAC(),
                 transitions={'outcome1':'SUB',
                     'outcome3':'SUB'},
