@@ -101,7 +101,8 @@ def main():
     sm.userdata.sm_target = 'NULL'
     with sm:
         smach.StateMachine.add('SUB', Subscription(),
-                transitions={'outcome1':'NAV'},
+                transitions={'outcome1':'NAV',
+                    'outcome2':'SUB'},
                 remapping={'sub_target_out':'sm_target'})
         smach.StateMachine.add('NAV', NavigationAC(),
                 transitions={'outcome1':'SUB',
