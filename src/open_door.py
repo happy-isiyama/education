@@ -39,11 +39,8 @@ class PublishClass():
         self.pub_message.publish(twist_cmd)
 
 def main():
-<<<<<<< HEAD
     safety_distance = 1.0           #安全に進める距離の基準を入れた定数
-=======
     safety_distance = 2.0           #安全に進める距離の基準を入れた定数
->>>>>>> 798983ecb1569d6aa49b6bc425d45d8ff687e0bb
     rospy.loginfo('start "open_door"')
     sc = SubscriberClass()
     pc = PublishClass()
