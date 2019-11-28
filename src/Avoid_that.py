@@ -21,7 +21,7 @@ class LocationSeach(smach.State):
                             input_keys=['location_in'],
                             output_keys=['location_out','list_out'])
 
-    def excute(self, userdata):
+    def execute(self, userdata):
         userdata.list_out  = searchLocationName(userdata.location_out)
         return 'outcome1'
 
@@ -34,7 +34,7 @@ class Action(smach.State):
                             output_keys=['target_out'])
         self.jaj = 'failed'
 
-    def excute(self, userdata):
+    def execute(self, userdata):
         while not rospy.is_shutdown() and self.jaj == 'failed':
             self.jaj = navigationAC(list_in)
             rospy.sleep(1.0)
@@ -45,19 +45,19 @@ class Action(smach.State):
             return 'outcome3'
 
 
-def mani():
+def main():
     rospy.loginfo('Start "Navigation"')
-    sm = smach_StateMachine(outcomes=['outcome4'])
+    sm = smach.StateMachine(outcomes=['outcome4'])
     sm.userdata.sm_target = 'capboard'
     with sm:
-        smach_StateMachine.add('LOCATION_SEACH', LocationSeach(),
+        smach.StateMachine.add('LOCATION_SEACH', LocationSeach(),
                 transitions={
                     'outcome1':'ACTION'},
                 remapping={
                     'location_in':'sm_target',
                     'location_out':'sm_target',
                     'list_out':'coord_list'})
-        smach_StateMachine.add('ANCTION', Action(),
+        smach.StateMachine.add('ACTION', Action(),
                 transitions={
                     'outcome2':'LOCATION_SEACH',
                     'outcome3':'outcome4'},
@@ -65,7 +65,7 @@ def mani():
                     'target_in':'sm_target',
                     'target_out':'sm_target',
                     'list_in':'coord_list'})
-    outcome = sm.excute()
+    outcome = sm.execute()
     rospy.loginfo('Finish "Navigation"')
 
 if __name__ == '__main__':
