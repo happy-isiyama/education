@@ -10,9 +10,10 @@ import rospy
 import sys
 import smach
 import smach_ros
-from common_action_client.py import navigationAC
-from common_function.py import searchLocationName
 
+sys.path.insert(0, '/home/athome/catkin_ws/src/mimi_common_pkg/scripts')
+from common_action_client import navigationAC
+from common_function import *
 
 class LocationSeach(smach.State):
     def __init__(self):
@@ -22,24 +23,24 @@ class LocationSeach(smach.State):
                             output_keys=['location_out','list_out'])
 
     def execute(self, userdata):
-        userdata.list_out  = searchLocationName(userdata.location_out)
+        userdata.list_out  = searchLocationName(userdata.location_in)
         return 'outcome1'
 
 
 class Action(smach.State):
     def __init__(self):
         smach.State.__init__(self,
-                            outcomes=['outcome2','outcome3'],
-                            input_keys=['target_in','list_in'],
-                            output_keys=['target_out'])
+                outcomes=['outcome2','outcome3'],
+                input_keys=['target_in','list_in'],
+                output_keys=['target_out'])
         self.jaj = 'failed'
 
     def execute(self, userdata):
         while not rospy.is_shutdown() and self.jaj == 'failed':
-            self.jaj = navigationAC(list_in)
+            self.jaj = navigationAC(userdata.list_in)
             rospy.sleep(1.0)
-        if target_in == 'capboard':
-            target_out = 'operater'
+        if userda.target_in == 'capboard':
+            userda.target_out = 'operater'
             return 'outcome2'
         else:
             return 'outcome3'
