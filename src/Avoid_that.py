@@ -24,7 +24,7 @@ class LocationSeach(smach.State):
 
     def execute(self, userdata):
         userdata.list_out  = searchLocationName(userdata.location_in)
-        if userdata.location_in != 'capboard':
+        if userdata.location_in != 'cupboard':
             userdata.location_out = userdata.location_in
         return 'outcome1'
 
@@ -35,14 +35,14 @@ class Action(smach.State):
                 outcomes=['outcome2','outcome3'],
                 input_keys=['target_in','list_in'],
                 output_keys=['target_out'])
-        self.jaj = 'failed'
+        self.flg = 'failed'
 
     def execute(self, userdata):
-        while not rospy.is_shutdown() and self.jaj == 'failed':
-            self.jaj = navigationAC(userdata.list_in)
+        while not rospy.is_shutdown() and self.flg == 'failed':
+            self.flg = navigationAC(userdata.list_in)
             rospy.sleep(1.0)
-        if userda.target_in == 'capboard':
-            userda.target_out = 'operater'
+        if userdata.target_in == 'cupboard':
+            userdata.target_out = 'operator'
             return 'outcome2'
         else:
             return 'outcome3'
@@ -51,7 +51,7 @@ class Action(smach.State):
 def main():
     rospy.loginfo('Start "Navigation"')
     sm = smach.StateMachine(outcomes=['outcome4'])
-    sm.userdata.sm_target = 'capboard'
+    sm.userdata.sm_target =  'cupboard'
     with sm:
         smach.StateMachine.add('LOCATION_SEACH', LocationSeach(),
                 transitions={
