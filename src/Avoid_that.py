@@ -24,6 +24,8 @@ class LocationSeach(smach.State):
 
     def execute(self, userdata):
         userdata.list_out  = searchLocationName(userdata.location_in)
+        if userdata.location_in != 'capboard':
+            userdata.location_out = userdata.location_in
         return 'outcome1'
 
 
