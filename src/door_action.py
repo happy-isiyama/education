@@ -29,7 +29,7 @@ class OpenDoor():
         self.safe_way = False
         self._action_server.start()
 
-    def laserscanCB(self, recive_msg):
+    def laserscanCB(self, receive_msg):
         self.laser = receive_msg
         self.front_value = self.laser.ranges[359]
         self.safe_way = True
@@ -42,16 +42,17 @@ class OpenDoor():
 
     def execute_cb(self, goal):
         rospy.loginfo('start"door_action"')
-        while not rospy.is_shutdown() and self.safe_way == True:
+        while not rospy.is_shutdown() and self.safe_way == False:
             rospy.loginfo('wait for laserscan ...')
+            rospy.sleep(1.0)
         if self.safe_way == True:
             feedback = OpenDoorFeedback('get value')
             self.pub.publish(feedback)
         self.safe_way = False
         if self.front_value < 2.0:
             result = OpenDoorResult(True)
-            for i in range(10):
-                self.linerContorol(0.1)
+        #    for i in range(10):
+            self.linerContorol(0.1)
         else:
             result = OpenDoorResult(False)
         self.action_server.set_succeeded(result)
