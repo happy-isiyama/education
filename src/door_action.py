@@ -11,23 +11,27 @@ import rospy
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
 import actionlib
+from actionlib import SimpleActionServer
 from education.msg import OpenDoorAction
 from education.msg import OpenDoorResult
 from education.msg import OpenDoorFeedback
 
-class OpneDoor():
+class OpenDoor():
     def __init__(self):
         self.pub = rospy.Publisher('/cmd_vel_mux/input/teleope', Twist, queue_size = 10)
-        self.sub = rospy.Subscriber('/scan', LaserScan, self.messageCB)
+        self.sub = rospy.Subscriber('/scan', LaserScan, self.laserscanCB)
         self.laser = LaserScan()
-        self.front_value = 0.0
-        self.action_server = actionlib.SimpleActionserver(
-                'door_action', OpenDoorAction, execute_cd = self.door_open, auto_start=False)
+        self.front_value = []
+        self._action_server = actionlib.SimpleActionServer('door_action',
+                OpenDoorAction, 
+                execute_cb = self.execute_cb,
+                auto_start=False)
         self.safe_way = False
-        self.action_server.start()
+        self._action_server.start()
 
     def laserscanCB(self, recive_msg):
         self.laser = receive_msg
+        self.front_value = self.laser.ranges[359]
         self.safe_way = True
 
     def linerContorol(self, value):
@@ -36,7 +40,7 @@ class OpneDoor():
         rospy.sleep(0.1)
         self.pub.Publish(twist_cmd)
 
-    def door_open(self):
+    def execute_cb(self, goal):
         rospy.loginfo('start"door_action"')
         while not rospy.is_shutdown() and self.safe_way == True:
             rospy.loginfo('wait for laserscan ...')
@@ -44,17 +48,16 @@ class OpneDoor():
             feedback = OpenDoorFeedback('get value')
             self.pub.publish(feedback)
         self.safe_way = False
-        sel.front_value = self.ranges[359]
         if self.front_value < 2.0:
-            result = OpenDoorResult('start foward')
+            result = OpenDoorResult(True)
             for i in range(10):
                 self.linerContorol(0.1)
         else:
-            result = OpenDoorResult('false foward')
+            result = OpenDoorResult(False)
         self.action_server.set_succeeded(result)
 
             
 if __name__ == '__main__':
-    rospy.init__node('door_action')
-    door_action = OpenDoor()
+    rospy.init_node('door_action')
+    OpenDoor()
     rospy.spin()
