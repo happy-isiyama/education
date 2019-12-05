@@ -1,0 +1,6 @@
+string  open_door
+---
+string lase_ranges
+---
+bool action_result
+
