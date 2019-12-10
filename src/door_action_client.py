@@ -13,14 +13,14 @@ from education.msg  import OpenDoorAction
 from education.msg import OpenDoorGoal
 
 def door():
-    action_client = actionlib.SimpleActionClient('door_action', OpenDoorAction)
-    action_client.wait_for_server()
+    _action_client = actionlib.SimpleActionClient('door_action', OpenDoorAction)
+    _action_client.wait_for_server()
     goal = OpenDoorGoal()
     goal.open_door = 'null'
     
-    action_client.send_goal(goal)
-    action_client.wait_for_result()
-    result = action_client.get_result()
+    _action_client.send_goal(goal)
+    _action_client.wait_for_result()
+    result = _action_client.get_result()
     if result == True:
         rospy.loginfo('succece!!')
     else:

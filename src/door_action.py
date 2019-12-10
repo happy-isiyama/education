@@ -22,40 +22,38 @@ class OpenDoor():
         self.sub = rospy.Subscriber('/scan', LaserScan, self.laserscanCB)
         self.laser = LaserScan()
         self.front_value = []
-        self._action_server = actionlib.SimpleActionServer('door_action',
+        self._action_server = SimpleActionServer('door_action',
                 OpenDoorAction, 
                 execute_cb = self.execute_cb,
                 auto_start=False)
-        self.safe_way = False
+        self.flg= False
         self._action_server.start()
 
     def laserscanCB(self, receive_msg):
         self.laser = receive_msg
         self.front_value = self.laser.ranges[359]
-        self.safe_way = True
+        self.flg = True
 
     def linerContorol(self, value):
         twist_cmd = Twist()
-        twist_cmd.liner.x = value
+        twist_cmd.linear.x = value
         rospy.sleep(0.1)
-        self.pub.Publish(twist_cmd)
+        self.pub.publish(twist_cmd)
 
     def execute_cb(self, goal):
         rospy.loginfo('start"door_action"')
-        while not rospy.is_shutdown() and self.safe_way == False:
+        while not rospy.is_shutdown() and self.flg == False:
             rospy.loginfo('wait for laserscan ...')
-            rospy.sleep(1.0)
-        if self.safe_way == True:
-            feedback = OpenDoorFeedback('get value')
-            self.pub.publish(feedback)
-        self.safe_way = False
-        if self.front_value < 2.0:
-            result = OpenDoorResult(True)
+            rospy.sleep(2.0)
+        self.flg = False
+        if self.front_value > 2.0:
+            result = OpenDoorResult()
+            self._action_server.set_succeeded(result=True)
         #    for i in range(10):
             self.linerContorol(0.1)
         else:
-            result = OpenDoorResult(False)
-        self.action_server.set_succeeded(result)
+            result = OpenDoorResult()
+            self._action_server.set_succeeded(result=False)
 
             
 if __name__ == '__main__':
