@@ -18,17 +18,17 @@ from education.msg import OpenDoorFeedback
 
 class OpenDoor():
     def __init__(self):
-        self.pub = rospy.Publisher('/cmd_vel_mux/input/teleope', Twist, queue_size = 10)
+        self.pub = rospy.Publisher('/cmd_vel_mux/input/teleop', Twist, queue_size = 10)
         self.sub = rospy.Subscriber('/scan', LaserScan, self.laserscanCB)
         self.laser = LaserScan()
-        self.front_value = []
+        self.front_value = 999.9
         self._action_server = SimpleActionServer('door_action',
                 OpenDoorAction, 
                 execute_cb = self.execute,
                 auto_start=False)
         self.flg= False
-        self._action_server.start()
         self.result = OpenDoorResult()
+        self._action_server.start()
 
     def laserscanCB(self, receive_msg):
         self.front_value = receive_msg.ranges[359]
@@ -47,12 +47,11 @@ class OpenDoor():
                 rospy.loginfo('wait for laserscan ...')
                 rospy.sleep(2.0)
             self.flg = False
-            if self.front_value > 2.0:
-                self.result = True
-        #    for i in range(10):
+            while not rospy.is_shutdown() and self.front_value < 1.0:
+                rospy.sleep(1.0)
+            self.result.data = True
+            for i in range(10):
                 self.linerContorol(0.1)
-            else:
-                self.result = False
             self._action_server.set_succeeded(self.result)
         except rospy.ROSInterruptException:
             rospy.loginfo('Interrupted')
